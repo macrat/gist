@@ -5,6 +5,14 @@ simple gist client for console.
 	$ go get github.com/macrat/gist
 ```
 
+You must set username and personal access token of github into environment variables.
+Please write like this into .bashrc if you use bash.
+
+``` sh
+	export GIT_USERNAME=your-ID-of-github
+	export GIT_TOKEN=your-personal-access-token-of-github
+```
+
 # Usage
 ## View your gists
 ``` sh
