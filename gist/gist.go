@@ -131,3 +131,8 @@ func UpdateGist(id, filename, description, content string) (*Gist, error) {
 		return &gist, err
 	}
 }
+
+func DeleteGist(id string) (err error) {
+	_, err = request("DELETE", "/gists/"+id, nil)
+	return
+}

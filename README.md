@@ -105,7 +105,12 @@ There is no way to update description without update content.
 Please replace with same content if you want.
 
 ## Delete gist
-There is no way yet.
+``` sh
+	$ gist -delete 0
+```
+
+Please be careful.
+`-delete` option will delete your gist without confirm.
 
 # License
 [MIT License](https://opensource.org/licenses/MIT) (c)2016 [MacRat](http://blanktar.jp)

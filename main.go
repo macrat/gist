@@ -159,6 +159,23 @@ func EditGist(id, description string) {
 	fmt.Println(result.URL)
 }
 
+func DeleteGist(id string) {
+	id, fname, err := parseID(id)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(-1)
+	}
+	if fname != "" {
+		fmt.Fprintln(os.Stderr, "Can't specify file name when deleting gist.")
+		os.Exit(1)
+	}
+
+	if err := gist.DeleteGist(id); err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(-1)
+	}
+}
+
 func main() {
 	flag.Usage = func() {
 		fmt.Printf("$ %s [options...] [gist ID[/file name]]\n", os.Args[0])
@@ -175,6 +192,7 @@ func main() {
 	starred := flag.Bool("s", false, "Show starred gists.")
 	create := flag.String("c", "", "New gist file name. If given it, create new gist from stdin.")
 	update := flag.Bool("u", false, "Update gist by input from stdin. You must specify ID.")
+	delete_ := flag.Bool("delete", false, "Delete gist. You must specify ID.")
 	description := flag.String("d", "", "Description for gist.")
 	verbose := flag.Bool("v", false, "Enable verbose output.")
 	help := flag.Bool("h", false, "Show this message.")
@@ -202,12 +220,21 @@ func main() {
 	} else if len(args) == 1 {
 		if *update {
 			check("update gist", map[bool]string{
+				*delete_:         "-delete",
 				*num != 0:        "-n",
 				*starred:         "-s",
 				*verbose:         "-v",
 				len(*create) > 0: "-c",
 			})
 			EditGist(args[0], *description)
+		} else if *delete_ {
+			check("delete gist", map[bool]string{
+				*num != 0:        "-n",
+				*starred:         "-s",
+				*verbose:         "-v",
+				len(*create) > 0: "-c",
+			})
+			DeleteGist(args[0])
 		} else {
 			check("show gist", map[bool]string{
 				*starred:              "-s",
@@ -221,6 +248,7 @@ func main() {
 
 	if len(*create) > 0 {
 		check("create gist", map[bool]string{
+			*delete_:  "-delete",
 			*num != 0: "-n",
 			*starred:  "-s",
 			*update:   "-u",
