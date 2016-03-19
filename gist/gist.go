@@ -26,13 +26,13 @@ func getUserInfo() (username, token string, err error) {
 	return
 }
 
-func get(path string) (string, error) {
+func request(method, path string, data []byte) (response string, err error) {
 	username, token, err := getUserInfo()
 	if err != nil {
 		return "", err
 	}
 
-	req, err := http.NewRequest("GET", "https://api.github.com"+path, nil)
+	req, err := http.NewRequest(method, "https://api.github.com"+path, bytes.NewReader(data))
 	if err != nil {
 		return "", err
 	}
@@ -51,33 +51,12 @@ func get(path string) (string, error) {
 	}
 }
 
+func get(path string) (string, error) {
+	return request("GET", path, nil)
+}
+
 func post(path string, data []byte) (string, error) {
-	username := os.Getenv("GIT_USERNAME")
-	if username == "" {
-		return "", UserNameNotSet
-	}
-	token := os.Getenv("GIT_TOKEN")
-	if token == "" {
-		return "", TokenNotSet
-	}
-
-	req, err := http.NewRequest("POST", "https://api.github.com"+path, bytes.NewReader(data))
-	if err != nil {
-		return "", err
-	}
-	req.SetBasicAuth(username, token)
-
-	resp, err := (&http.Client{}).Do(req)
-	if err != nil {
-		return "", err
-	}
-
-	defer resp.Body.Close()
-	if bytes, err := ioutil.ReadAll(resp.Body); err != nil {
-		return "", err
-	} else {
-		return string(bytes), nil
-	}
+	return request("POST", path, data)
 }
 
 func GetList() (result []Overview, err error) {

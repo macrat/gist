@@ -1,12 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"flag"
-	"strings"
-	"strconv"
+	"fmt"
 	"io/ioutil"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/macrat/gist/gist"
 )
@@ -42,8 +42,8 @@ func PrintList(verbose bool, num int, listFunc func() ([]gist.Overview, error)) 
 	}
 }
 
-func PrintGist(verbose bool, num int, id string) {
-	var fname string
+func parseID(identifier string) (id, fname string, err error) {
+	id = identifier
 	if xs := strings.SplitN(id, "/", 2); len(xs) == 2 {
 		fname = xs[1]
 		id = xs[0]
@@ -51,45 +51,55 @@ func PrintGist(verbose bool, num int, id string) {
 
 	if idx, err := strconv.Atoi(id); err == nil && idx >= 0 {
 		if gists, err := gist.GetList(); err != nil {
-			fmt.Fprintf(os.Stderr, err.Error())
-			os.Exit(-1)
+			return "", "", err
 		} else if idx < len(gists) {
 			id = gists[idx].ID
 		}
 	}
 
-	if gist, err := gist.GetGist(id); err != nil {
+	return
+}
+
+func PrintGist(verbose bool, num int, id string) {
+	id, fname, err := parseID(id)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(-1)
+	}
+
+	gist, err := gist.GetGist(id)
+	if err != nil {
 		fmt.Fprintf(os.Stderr, err.Error())
 		os.Exit(-1)
-	} else {
-		if verbose {
-			fmt.Printf("%s\n", gist.ID)
-			fmt.Printf("%s\n", gist.URL)
-			fmt.Printf("created at: %s updated at: %s\n", gist.CreatedAt, gist.UpdatedAt)
-			fmt.Printf("files: %d comments: %d forks: %d\n", len(gist.Files), gist.Comments, len(gist.Forks))
-			fmt.Println(gist.Description)
-			fmt.Println()
+	}
+
+	if verbose {
+		fmt.Printf("%s\n", gist.ID)
+		fmt.Printf("%s\n", gist.URL)
+		fmt.Printf("created at: %s updated at: %s\n", gist.CreatedAt, gist.UpdatedAt)
+		fmt.Printf("files: %d comments: %d forks: %d\n", len(gist.Files), gist.Comments, len(gist.Forks))
+		fmt.Println(gist.Description)
+		fmt.Println()
+	}
+
+	count := 0
+	for name, file := range gist.Files {
+		if fname != "" && name != fname {
+			continue
 		}
+		if num > 0 && count >= num {
+			break
+		}
+		count++
 
-		count := 0
-		for name, file := range gist.Files {
-			if fname != "" && name != fname {
-				continue
-			}
-			if num > 0 && count >= num {
-				break
-			}
-			count++
-
-			if verbose {
-				fmt.Printf("==> %s / %s(%s) <==\n", name, file.Language, file.Type)
-				fmt.Println(file.Content)
-			} else if fname == "" && num != 1 && len(gist.Files) > 1 {
-				fmt.Println("==>", name, "<==")
-				fmt.Println(file.Content)
-			} else {
-				fmt.Print(file.Content)
-			}
+		if verbose {
+			fmt.Printf("==> %s / %s(%s) <==\n", name, file.Language, file.Type)
+			fmt.Println(file.Content)
+		} else if fname == "" && num != 1 && len(gist.Files) > 1 {
+			fmt.Println("==>", name, "<==")
+			fmt.Println(file.Content)
+		} else {
+			fmt.Print(file.Content)
 		}
 	}
 }
@@ -98,6 +108,7 @@ func CreateGist(filename, description string) {
 	content, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 	result, err := gist.CreateGist(filename, description, string(content))
 	if err != nil {
