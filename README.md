@@ -82,7 +82,29 @@ If you want write description, please use `-d` option.
 	$ echo 'this is test' | gist -c 'newgist.txt' -d 'this is description'
 ```
 
-## Update/Delete gist
+## Update gist
+Replace gist file with stdin.
+
+``` sh
+	$ echo 'new content' | gist -u 0
+```
+
+If some files exist, you must specify file name.
+
+``` sh
+	$ echo 'new content' | gist -u 0/name.txt
+```
+
+You can update description with `-d` option..
+
+``` sh
+	$ echo 'new content' | gist -u -d 'new description' 0
+```
+
+There is no way to update description without update content.
+Please replace with same content if you want.
+
+## Delete gist
 There is no way yet.
 
 # License

@@ -110,3 +110,8 @@ type NewGist struct {
 	Files       map[string]NewGistFile `json:"files"`
 	Public      bool                   `json:"public"`
 }
+
+type EditGist struct {
+	Description string                 `json:"description"`
+	Files       map[string]NewGistFile `json:"files"`
+}

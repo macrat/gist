@@ -69,7 +69,7 @@ func PrintGist(verbose bool, num int, id string) {
 
 	gist, err := gist.GetGist(id)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, err.Error())
+		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(-1)
 	}
 
@@ -110,10 +110,50 @@ func CreateGist(filename, description string) {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+
 	result, err := gist.CreateGist(filename, description, string(content))
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
+		os.Exit(-1)
+	}
+
+	fmt.Println(result.URL)
+}
+
+func EditGist(id, description string) {
+	id, fname, err := parseID(id)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(-1)
+	}
+
+	if fname == "" {
+		gist, err := gist.GetGist(id)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err.Error())
+			os.Exit(-1)
+		}
+
+		if len(gist.Files) != 1 {
+			fmt.Fprintln(os.Stderr, "This gist has multiple files.")
+			os.Exit(1)
+		}
+
+		for k, _ := range gist.Files {
+			fname = k
+		}
+	}
+
+	content, err := ioutil.ReadAll(os.Stdin)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
+	}
+
+	result, err := gist.UpdateGist(id, fname, description, string(content))
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(-1)
 	}
 
 	fmt.Println(result.URL)
@@ -134,6 +174,7 @@ func main() {
 	num := flag.Int("n", 0, "Number of items. If 0 or less, be show all items.")
 	starred := flag.Bool("s", false, "Show starred gists.")
 	create := flag.String("c", "", "New gist file name. If given it, create new gist from stdin.")
+	update := flag.Bool("u", false, "Update gist by input from stdin. You must specify ID.")
 	description := flag.String("d", "", "Description for gist.")
 	verbose := flag.Bool("v", false, "Enable verbose output.")
 	help := flag.Bool("h", false, "Show this message.")
@@ -144,38 +185,47 @@ func main() {
 		os.Exit(0)
 	}
 
+	check := func(operation string, flags map[bool]string) {
+		for x, y := range flags {
+			if x {
+				fmt.Fprintf(os.Stderr, "Can't use %s option with %s.", y, operation)
+				fmt.Fprintln(os.Stderr, "Please see help.")
+				os.Exit(1)
+			}
+		}
+	}
+
 	if args := flag.Args(); len(args) >= 2 {
 		fmt.Fprintln(os.Stderr, "Can't give multiple IDs.")
 		fmt.Fprintln(os.Stderr, "Please see help.")
 		os.Exit(1)
 	} else if len(args) == 1 {
-		for x, y := range map[bool]string{
-			*starred:              "-s",
-			len(*create) > 0:      "-c",
-			len(*description) > 0: "-d",
-		} {
-			if x {
-				fmt.Fprintln(os.Stderr, "Can't use", y, "option with show gist.")
-				fmt.Fprintln(os.Stderr, "Please see help.")
-				os.Exit(1)
-			}
+		if *update {
+			check("update gist", map[bool]string{
+				*num != 0:        "-n",
+				*starred:         "-s",
+				*verbose:         "-v",
+				len(*create) > 0: "-c",
+			})
+			EditGist(args[0], *description)
+		} else {
+			check("show gist", map[bool]string{
+				*starred:              "-s",
+				len(*create) > 0:      "-c",
+				len(*description) > 0: "-d",
+			})
+			PrintGist(*verbose, *num, args[0])
 		}
-		PrintGist(*verbose, *num, args[0])
 		os.Exit(0)
 	}
 
 	if len(*create) > 0 {
-		for x, y := range map[bool]string{
-			*starred:  "-s",
+		check("create gist", map[bool]string{
 			*num != 0: "-n",
+			*starred:  "-s",
+			*update:   "-u",
 			*verbose:  "-v",
-		} {
-			if x {
-				fmt.Fprintln(os.Stderr, "Can't use", y, "option with create gist.")
-				fmt.Fprintln(os.Stderr, "Please see help.")
-				os.Exit(1)
-			}
-		}
+		})
 		CreateGist(*create, *description)
 		os.Exit(0)
 	}

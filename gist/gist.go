@@ -59,6 +59,10 @@ func post(path string, data []byte) (string, error) {
 	return request("POST", path, data)
 }
 
+func patch(path string, data []byte) (string, error) {
+	return request("PATCH", path, data)
+}
+
 func GetList() (result []Overview, err error) {
 	if raw, err := get("/gists"); err != nil {
 		return nil, err
@@ -99,6 +103,27 @@ func CreateGist(filename, description, content string) (*Gist, error) {
 	}
 
 	if result, err := post("/gists", bytes); err != nil {
+		return nil, err
+	} else {
+		var gist Gist
+		err := json.Unmarshal([]byte(result), &gist)
+		return &gist, err
+	}
+}
+
+func UpdateGist(id, filename, description, content string) (*Gist, error) {
+	editGist := EditGist{
+		Files: map[string]NewGistFile{filename: NewGistFile{Content: content}},
+	}
+	if description != "" {
+		editGist.Description = description
+	}
+	bytes, err := json.Marshal(editGist)
+	if err != nil {
+		return nil, err
+	}
+
+	if result, err := patch("/gists/"+id, bytes); err != nil {
 		return nil, err
 	} else {
 		var gist Gist
