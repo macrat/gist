@@ -32,7 +32,7 @@ func PrintList(verbose bool, num int, listFunc func() ([]gist.Overview, error)) 
 			fmt.Printf(" %s files: %d comments: %d\n", x.ID, len(x.Files), x.Comments)
 			if verbose {
 				fmt.Printf(" created at: %s updated at: %s\n", x.CreatedAt, x.UpdatedAt)
-				fmt.Println("", x.URL)
+				fmt.Println("", x.HTMLURL)
 			}
 			fmt.Println("", strings.Replace(x.Description, "\n", "\n ", -1))
 			if len(x.Description) > 0 {
@@ -74,8 +74,7 @@ func PrintGist(verbose bool, num int, id string) {
 	}
 
 	if verbose {
-		fmt.Printf("%s\n", gist.ID)
-		fmt.Printf("%s\n", gist.URL)
+		fmt.Printf("%s\n", gist.HTMLURL)
 		fmt.Printf("created at: %s updated at: %s\n", gist.CreatedAt, gist.UpdatedAt)
 		fmt.Printf("files: %d comments: %d forks: %d\n", len(gist.Files), gist.Comments, len(gist.Forks))
 		fmt.Println(gist.Description)
@@ -117,7 +116,7 @@ func CreateGist(filename, description string) {
 		os.Exit(-1)
 	}
 
-	fmt.Println(result.URL)
+	fmt.Println(result.HTMLURL)
 }
 
 func EditGist(id, description string) {
@@ -156,7 +155,7 @@ func EditGist(id, description string) {
 		os.Exit(-1)
 	}
 
-	fmt.Println(result.URL)
+	fmt.Println(result.HTMLURL)
 }
 
 func DeleteGist(id string) {
