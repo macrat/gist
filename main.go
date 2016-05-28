@@ -25,7 +25,7 @@ func PrintList(verbose bool, num int, listFunc func() ([]gist.Overview, error)) 
 		os.Exit(-1)
 	} else {
 		for i, x := range parsed {
-			if i > num && num > 0 {
+			if i >= num && num > 0 {
 				break
 			}
 			fmt.Printf("%d %s/%s %s\n", i, x.Owner.Login, files2str(x.Files), x.UpdatedAt)
