@@ -126,20 +126,26 @@ func EditGist(id, description string) {
 		os.Exit(-1)
 	}
 
-	if fname == "" {
+	if fname == "" || description == "" {
 		gist, err := gist.GetGist(id)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err.Error())
 			os.Exit(-1)
 		}
 
-		if len(gist.Files) != 1 {
-			fmt.Fprintln(os.Stderr, "This gist has multiple files.")
-			os.Exit(1)
+		if fname == "" {
+			if len(gist.Files) != 1 {
+				fmt.Fprintln(os.Stderr, "This gist has multiple files.")
+				os.Exit(1)
+			}
+
+			for k, _ := range gist.Files {
+				fname = k
+			}
 		}
 
-		for k, _ := range gist.Files {
-			fname = k
+		if description == "" {
+			description = gist.Description
 		}
 	}
 
